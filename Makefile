@@ -1,4 +1,4 @@
-.PHONY: help up down ps logs logs-backend clean lint-be test-be typecheck-fe check
+.PHONY: help up down ps logs logs-backend clean lint-be test-be typecheck-fe check dev dev-be dev-fe
 
 # Variables
 COMPOSE = docker compose
@@ -6,11 +6,30 @@ FRONTEND_DIR = frontend
 FRONTEND_NPM = cd $(FRONTEND_DIR) && npm
 BACKEND_DIR = backend
 BACKEND_CD = cd $(BACKEND_DIR) &&
+DEV_DATA_DIR = $(CURDIR)/.dev-data
 
 help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-up: ## Start environment, full stack
+# ── Development (hot reload) ────────────────────
+dev: ## Start both frontend and backend with hot reload
+	@mkdir -p $(DEV_DATA_DIR)
+	@make -j2 dev-be dev-fe
+
+dev-be: ## Start backend with hot reload (uvicorn --reload)
+	@mkdir -p $(DEV_DATA_DIR)
+	DATABASE_URL="sqlite:///$(DEV_DATA_DIR)/app.db" \
+	DATA_DIR="$(DEV_DATA_DIR)" \
+	FRONTEND_DIST_DIR="$(FRONTEND_DIR)/dist" \
+	MAX_CONCURRENT_JOBS="1" \
+	OMP_NUM_THREADS="4" \
+	$(BACKEND_CD) uvicorn app.main:app --reload --host 0.0.0.0 --port 8176
+
+dev-fe: ## Start frontend with Vite HMR
+	$(FRONTEND_NPM) run dev
+
+# ── Docker (production-like) ─────────────────────
+up: ## Start environment, full stack (Docker)
 	$(COMPOSE) up -d --build
 
 down: ## Stop environment

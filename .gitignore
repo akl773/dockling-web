@@ -12,3 +12,4 @@ data/
 frontend/vite.config.js
 frontend/vite.config.d.ts
 .kilo/
+.dev-data/
