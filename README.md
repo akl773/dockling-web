@@ -73,9 +73,5 @@ Use the Makefile to manage the project:
 make help           # Show all available targets
 make up             # Start the app (Docker)
 make down           # Stop the app
-make dev            # Start both frontend and backend with hot reload
-make dev-be         # Start backend only (hot reload)
-make dev-fe         # Start frontend only (Vite HMR)
-make check          # Run lint and tests
-make clean         # Clean up containers and volumes
+make clean          # Clean up containers and volumes
 ```
