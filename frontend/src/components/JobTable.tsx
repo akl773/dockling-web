@@ -25,7 +25,7 @@ function statusTone(status: Job['status']) {
 
 export function JobTable({ title, description, jobs, batchesById, selectedJobId, onSelectJob }: JobTableProps) {
   return (
-    <section className="panel stack-md">
+    <section className="view-section stack-sm">
       <div className="section-heading">
         <div>
           <p className="eyebrow">{title}</p>
@@ -33,18 +33,19 @@ export function JobTable({ title, description, jobs, batchesById, selectedJobId,
         </div>
       </div>
 
-      <div className="stack-sm">
+      <div className="job-list" role="list">
         {jobs.length === 0 ? <p className="muted">No jobs to display.</p> : null}
         {jobs.map((job) => {
           const batch = batchesById[job.batch_id]
           return (
             <button
-              className={`job-card${selectedJobId === job.id ? ' selected' : ''}`}
+              className={`job-row${selectedJobId === job.id ? ' selected' : ''}`}
               key={job.id}
               onClick={() => onSelectJob(job.id)}
               type="button"
+              role="listitem"
             >
-              <div className="job-card-header">
+              <div className="job-row-main">
                 <div>
                   <strong>{job.original_filename}</strong>
                   <p>{new Date(job.created_at).toLocaleString()}</p>
@@ -58,7 +59,7 @@ export function JobTable({ title, description, jobs, batchesById, selectedJobId,
                 <span>{job.progress}%</span>
                 <span>Batch {job.batch_id.slice(0, 8)}</span>
                 {batch ? (
-                  <a href={batchDownloadUrl(batch.id)} onClick={(event) => event.stopPropagation()}>
+                  <a className="inline-link" href={batchDownloadUrl(batch.id)} onClick={(event) => event.stopPropagation()}>
                     Download batch zip
                   </a>
                 ) : null}

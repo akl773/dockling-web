@@ -109,10 +109,10 @@ export function UploadPanel({ onSubmit, isSubmitting }: UploadPanelProps) {
   }
 
   return (
-    <section className="panel stack-lg">
+    <section className="view-section stack-md">
       <div>
-        <p className="eyebrow">Upload</p>
-        <h2>Queue PDFs with shared or per-file settings</h2>
+        <p className="eyebrow">New Batch</p>
+        <h2>Queue PDFs with shared and per-file settings</h2>
       </div>
 
       <div {...getRootProps({ className: `dropzone${isDragActive ? ' dropzone-active' : ''}` })}>
@@ -121,7 +121,7 @@ export function UploadPanel({ onSubmit, isSubmitting }: UploadPanelProps) {
         <span>Batch uploads, persisted history, and restart-safe processing.</span>
       </div>
 
-      <div className="card stack-sm">
+      <div className="form-band stack-sm">
         <div className="field-row">
           <label>
             <span>OCR</span>

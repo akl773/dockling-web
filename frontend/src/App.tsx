@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { JobDetail } from './components/JobDetail'
@@ -19,8 +19,11 @@ function flattenJobs(batches: Batch[]): Job[] {
   return batches.flatMap((batch) => batch.jobs.map((job) => ({ ...job, batch_id: batch.id })))
 }
 
+type AppView = 'overview' | 'new-batch' | 'active-jobs' | 'history'
+
 export default function App() {
   const queryClient = useQueryClient()
+  const [currentView, setCurrentView] = useState<AppView>('overview')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string>('')
 
@@ -31,7 +34,10 @@ export default function App() {
   })
 
   const batches = batchesQuery.data ?? []
-  const jobs = useMemo(() => flattenJobs(batches), [batches])
+  const jobs = useMemo(
+    () => flattenJobs(batches).sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at)),
+    [batches],
+  )
   const selectedJobFromList = jobs.find((job) => job.id === selectedJobId) ?? null
 
   const selectedJobQuery = useQuery({
@@ -68,56 +74,159 @@ export default function App() {
 
   const activeJobs = jobs.filter((job) => job.status === 'queued' || job.status === 'processing')
   const historyJobs = jobs.filter((job) => job.status === 'done' || job.status === 'failed')
+  const recentJobs = jobs.slice(0, 8)
   const batchesById = Object.fromEntries(batches.map((batch) => [batch.id, batch]))
 
+  const doneCount = jobs.filter((job) => job.status === 'done').length
+  const failedCount = jobs.filter((job) => job.status === 'failed').length
+  const processingCount = jobs.filter((job) => job.status === 'processing').length
+  const queuedCount = jobs.filter((job) => job.status === 'queued').length
+
+  useEffect(() => {
+    if (currentView === 'active-jobs') {
+      if (!selectedJobId || !activeJobs.some((job) => job.id === selectedJobId)) {
+        setSelectedJobId(activeJobs[0]?.id ?? null)
+      }
+      return
+    }
+
+    if (currentView === 'history') {
+      if (!selectedJobId || !historyJobs.some((job) => job.id === selectedJobId)) {
+        setSelectedJobId(historyJobs[0]?.id ?? null)
+      }
+      return
+    }
+
+    if (selectedJobId && !jobs.some((job) => job.id === selectedJobId)) {
+      setSelectedJobId(recentJobs[0]?.id ?? null)
+    }
+  }, [activeJobs, currentView, historyJobs, jobs, recentJobs, selectedJobId])
+
+  const navItems: Array<{ id: AppView; label: string; count?: number }> = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'new-batch', label: 'New Batch' },
+    { id: 'active-jobs', label: 'Active Jobs', count: activeJobs.length },
+    { id: 'history', label: 'History', count: historyJobs.length },
+  ]
+
   return (
-    <main className="app-shell">
-      <section className="hero panel">
-        <p className="eyebrow">Docling Web</p>
-        <h1>Local-first Docling conversions with durable history and batch exports.</h1>
-        <p className="hero-copy">
-          A single-service FastAPI + React stack that queues PDF conversions, stores Markdown output under a persistent volume,
-          and keeps Docling model downloads cached across container restarts.
-        </p>
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Docling Web</p>
+          <h1>Document Conversion Console</h1>
+        </div>
+        <div className="status-strip" aria-label="Queue status">
+          <span>Queued {queuedCount}</span>
+          <span>Processing {processingCount}</span>
+          <span>Done {doneCount}</span>
+          <span>Failed {failedCount}</span>
+          <span>Polling 1.5s</span>
+        </div>
         {feedback ? <p className="notice-banner">{feedback}</p> : null}
-      </section>
+      </header>
 
-      <section className="layout-grid">
-        <div className="column stack-lg">
-          <UploadPanel onSubmit={uploadMutation.mutateAsync} isSubmitting={uploadMutation.isPending} />
-          <JobTable
-            title="Active Queue"
-            description="Queued and processing jobs"
-            jobs={activeJobs}
-            batchesById={batchesById}
-            selectedJobId={selectedJobId}
-            onSelectJob={setSelectedJobId}
-          />
-        </div>
+      <div className="app-frame">
+        <aside className="side-nav" aria-label="Application views">
+          <nav>
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`nav-item${currentView === item.id ? ' active' : ''}`}
+                onClick={() => setCurrentView(item.id)}
+              >
+                <span>{item.label}</span>
+                {item.count !== undefined ? <span className="nav-count">{item.count}</span> : null}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-        <div className="column stack-lg">
-          <JobTable
-            title="History"
-            description="Completed and failed jobs"
-            jobs={historyJobs}
-            batchesById={batchesById}
-            selectedJobId={selectedJobId}
-            onSelectJob={setSelectedJobId}
-          />
-        </div>
+        <main className="view-main">
+          {currentView === 'overview' ? (
+            <section className="view-section stack-md">
+              <div className="stats-grid" aria-label="Overview metrics">
+                <div className="stat-row">
+                  <span>Total Jobs</span>
+                  <strong>{jobs.length}</strong>
+                </div>
+                <div className="stat-row">
+                  <span>Queued / Processing</span>
+                  <strong>
+                    {queuedCount} / {processingCount}
+                  </strong>
+                </div>
+                <div className="stat-row">
+                  <span>Done / Failed</span>
+                  <strong>
+                    {doneCount} / {failedCount}
+                  </strong>
+                </div>
+                <div className="stat-row">
+                  <span>Batches</span>
+                  <strong>{batches.length}</strong>
+                </div>
+              </div>
+              <JobTable
+                title="Recent Jobs"
+                description="Most recent queue activity"
+                jobs={recentJobs}
+                batchesById={batchesById}
+                selectedJobId={selectedJobId}
+                onSelectJob={setSelectedJobId}
+              />
+            </section>
+          ) : null}
 
-        <div className="column detail-column">
-          <JobDetail
-            job={selectedJob ?? null}
-            batch={selectedBatch}
-            markdown={markdownQuery.data ?? ''}
-            isMarkdownLoading={markdownQuery.isLoading}
-          />
-        </div>
-      </section>
+          {currentView === 'new-batch' ? (
+            <section className="view-section">
+              <UploadPanel onSubmit={uploadMutation.mutateAsync} isSubmitting={uploadMutation.isPending} />
+            </section>
+          ) : null}
 
-      {batchesQuery.isLoading ? <p className="footer-note">Loading queue state...</p> : null}
-      {batchesQuery.isError ? <p className="footer-note">{String(batchesQuery.error)}</p> : null}
-    </main>
+          {currentView === 'active-jobs' ? (
+            <section className="split-view">
+              <JobTable
+                title="Active Jobs"
+                description="Queued and processing"
+                jobs={activeJobs}
+                batchesById={batchesById}
+                selectedJobId={selectedJobId}
+                onSelectJob={setSelectedJobId}
+              />
+              <JobDetail
+                job={selectedJob ?? null}
+                batch={selectedBatch}
+                markdown={markdownQuery.data ?? ''}
+                isMarkdownLoading={markdownQuery.isLoading}
+              />
+            </section>
+          ) : null}
+
+          {currentView === 'history' ? (
+            <section className="split-view">
+              <JobTable
+                title="History"
+                description="Completed and failed"
+                jobs={historyJobs}
+                batchesById={batchesById}
+                selectedJobId={selectedJobId}
+                onSelectJob={setSelectedJobId}
+              />
+              <JobDetail
+                job={selectedJob ?? null}
+                batch={selectedBatch}
+                markdown={markdownQuery.data ?? ''}
+                isMarkdownLoading={markdownQuery.isLoading}
+              />
+            </section>
+          ) : null}
+
+          {batchesQuery.isLoading ? <p className="footer-note">Loading queue state...</p> : null}
+          {batchesQuery.isError ? <p className="footer-note">{String(batchesQuery.error)}</p> : null}
+        </main>
+      </div>
+    </div>
   )
 }

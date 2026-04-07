@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 
 import type { Batch, Job } from '../lib/api'
@@ -11,6 +12,8 @@ type JobDetailProps = {
 }
 
 export function JobDetail({ job, batch, markdown, isMarkdownLoading }: JobDetailProps) {
+  const [previewTab, setPreviewTab] = useState<'pdf' | 'markdown'>('pdf')
+
   async function copyMarkdown() {
     if (!markdown) {
       return
@@ -20,7 +23,7 @@ export function JobDetail({ job, batch, markdown, isMarkdownLoading }: JobDetail
 
   if (!job) {
     return (
-      <section className="panel empty-state">
+      <section className="view-section empty-state">
         <p className="eyebrow">Preview</p>
         <h2>Select a job to inspect the original PDF and generated Markdown.</h2>
       </section>
@@ -28,7 +31,7 @@ export function JobDetail({ job, batch, markdown, isMarkdownLoading }: JobDetail
   }
 
   return (
-    <section className="panel detail-panel stack-md">
+    <section className="view-section detail-panel stack-md">
       <div className="section-heading">
         <div>
           <p className="eyebrow">Job Detail</p>
@@ -59,12 +62,33 @@ export function JobDetail({ job, batch, markdown, isMarkdownLoading }: JobDetail
 
       {job.error_message ? <p className="error-banner">{job.error_message}</p> : null}
 
+      <div className="preview-tabs" role="tablist" aria-label="Preview tabs">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={previewTab === 'pdf'}
+          className={`tab-button${previewTab === 'pdf' ? ' active' : ''}`}
+          onClick={() => setPreviewTab('pdf')}
+        >
+          PDF
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={previewTab === 'markdown'}
+          className={`tab-button${previewTab === 'markdown' ? ' active' : ''}`}
+          onClick={() => setPreviewTab('markdown')}
+        >
+          Markdown
+        </button>
+      </div>
+
       <div className="preview-grid">
-        <div className="preview-card stack-sm">
+        <div className={`preview-pane stack-sm${previewTab !== 'pdf' ? ' pane-hidden-mobile' : ''}`}>
           <div className="preview-title">Original PDF</div>
           <iframe src={jobSourceUrl(job.id)} title={`PDF preview for ${job.original_filename}`} />
         </div>
-        <div className="preview-card stack-sm">
+        <div className={`preview-pane stack-sm${previewTab !== 'markdown' ? ' pane-hidden-mobile' : ''}`}>
           <div className="preview-title">Markdown</div>
           {isMarkdownLoading ? <p className="muted">Loading generated markdown...</p> : null}
           {!isMarkdownLoading && !markdown && job.status !== 'done' ? <p className="muted">Markdown will appear when conversion completes.</p> : null}
