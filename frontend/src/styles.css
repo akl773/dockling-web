@@ -1,0 +1,363 @@
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  --bg: #f4efe5;
+  --bg-accent: radial-gradient(circle at top left, rgba(29, 78, 216, 0.14), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(180, 83, 9, 0.14), transparent 28%),
+    linear-gradient(180deg, #f8f3ea 0%, #efe7db 100%);
+  --panel: rgba(255, 251, 245, 0.86);
+  --panel-strong: #fffaf2;
+  --border: rgba(66, 56, 41, 0.16);
+  --text: #31271b;
+  --muted: #6a5b48;
+  --primary: #0f5d8d;
+  --primary-strong: #0b486d;
+  --success: #2f6a4f;
+  --warning: #9d5b14;
+  --danger: #b83b35;
+  --shadow: 0 24px 80px rgba(79, 58, 30, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-accent);
+  color: var(--text);
+}
+
+a {
+  color: var(--primary-strong);
+}
+
+button,
+select {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: min(1540px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 40px;
+}
+
+.hero {
+  margin-bottom: 20px;
+}
+
+.hero h1,
+.panel h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.02em;
+}
+
+.hero-copy,
+.muted,
+.file-row p,
+.job-card p,
+.footer-note {
+  color: var(--muted);
+}
+
+.panel {
+  backdrop-filter: blur(14px);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.layout-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.05fr 1.4fr;
+  gap: 20px;
+}
+
+.column,
+.stack-lg,
+.stack-md,
+.stack-sm {
+  display: flex;
+  flex-direction: column;
+}
+
+.stack-lg {
+  gap: 18px;
+}
+
+.stack-md {
+  gap: 14px;
+}
+
+.stack-sm {
+  gap: 10px;
+}
+
+.detail-column {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--primary-strong);
+}
+
+.dropzone {
+  border: 1.5px dashed rgba(15, 93, 141, 0.4);
+  background: linear-gradient(135deg, rgba(15, 93, 141, 0.08), rgba(184, 131, 31, 0.06));
+  border-radius: 18px;
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 20px;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.dropzone-active {
+  transform: translateY(-2px);
+  border-color: var(--primary-strong);
+}
+
+.card,
+.job-card,
+.preview-card,
+.file-row {
+  background: var(--panel-strong);
+  border: 1px solid rgba(66, 56, 41, 0.12);
+  border-radius: 18px;
+}
+
+.field-row,
+.override-grid,
+.detail-meta,
+.action-row,
+.job-card-header,
+.job-meta,
+.section-heading {
+  display: flex;
+  gap: 12px;
+}
+
+.field-row,
+.override-grid {
+  flex-wrap: wrap;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+
+select,
+.primary-button,
+.ghost-button,
+.ghost-link {
+  border-radius: 12px;
+  border: 1px solid rgba(66, 56, 41, 0.16);
+  padding: 10px 12px;
+  background: white;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  color: white;
+  border: none;
+  font-weight: 700;
+}
+
+.ghost-button,
+.ghost-link {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.file-row {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.job-card {
+  border: 1px solid rgba(66, 56, 41, 0.1);
+  text-align: left;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.job-card.selected {
+  border-color: rgba(15, 93, 141, 0.46);
+  box-shadow: inset 0 0 0 1px rgba(15, 93, 141, 0.2);
+}
+
+.job-card-header,
+.job-meta,
+.section-heading,
+.detail-meta,
+.action-row {
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.progress-bar {
+  margin: 10px 0;
+  height: 10px;
+  background: rgba(66, 56, 41, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #0f5d8d, #cb7b1f);
+  border-radius: 999px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  text-transform: capitalize;
+}
+
+.pill.success {
+  background: rgba(47, 106, 79, 0.14);
+  color: var(--success);
+}
+
+.pill.warning {
+  background: rgba(157, 91, 20, 0.14);
+  color: var(--warning);
+}
+
+.pill.danger {
+  background: rgba(184, 59, 53, 0.14);
+  color: var(--danger);
+}
+
+.pill.muted {
+  background: rgba(66, 56, 41, 0.08);
+  color: var(--muted);
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.preview-card {
+  padding: 14px;
+  min-height: 580px;
+}
+
+.preview-card iframe {
+  width: 100%;
+  min-height: 520px;
+  border: 0;
+  border-radius: 14px;
+  background: white;
+}
+
+.preview-title {
+  font-weight: 700;
+}
+
+.markdown-shell {
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.markdown-shell h1,
+.markdown-shell h2,
+.markdown-shell h3 {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.markdown-shell pre,
+.markdown-shell code {
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.notice-banner,
+.error-banner {
+  margin: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.notice-banner {
+  background: rgba(15, 93, 141, 0.1);
+}
+
+.error-banner {
+  background: rgba(184, 59, 53, 0.12);
+  color: var(--danger);
+}
+
+.empty-state {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.footer-note {
+  margin: 18px 4px 0;
+}
+
+@media (max-width: 1220px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-card {
+    min-height: 440px;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100vw - 20px, 100%);
+    padding: 12px 0 24px;
+  }
+
+  .panel {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .dropzone {
+    min-height: 132px;
+  }
+
+  .preview-card iframe {
+    min-height: 380px;
+  }
+}
