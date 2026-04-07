@@ -31,14 +31,19 @@ The application runs as a modular monolith within a single Docker container. The
 ```
 
 ## Getting Started
-The easiest way to run Docling Web is using Docker Compose.
 
 ### Prerequisites
 - Docker and Docker Compose locally installed
 
-### Run Command
+### Quick Run (Docker Hub)
 ```bash
-docker compose up --build
+docker run -p 6176:6176 -p 8176:8176 -v docling-data:/data akl49879/docling-web:latest
+```
+Then open `http://localhost:6176`
+
+### Local Development
+```bash
+make up
 ```
 
 1. Open `http://localhost:6176` in your browser for the web interface.
@@ -62,20 +67,15 @@ The following environment variables can be configured in your `docker-compose.ym
 4. Failed jobs in a batch do not block the rest of the batch queue.
 
 ## Development Workflow
-If you prefer running components individually without Docker.
+Use the Makefile to manage the project:
 
-### Backend Setup
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-pytest backend/tests
-uvicorn app.main:app --app-dir backend --reload
-```
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
+make help           # Show all available targets
+make up             # Start the app (Docker)
+make down           # Stop the app
+make dev            # Start both frontend and backend with hot reload
+make dev-be         # Start backend only (hot reload)
+make dev-fe         # Start frontend only (Vite HMR)
+make check          # Run lint and tests
+make clean         # Clean up containers and volumes
 ```
