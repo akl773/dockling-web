@@ -119,19 +119,9 @@ input {
 .app-logo {
   width: 52px;
   height: 52px;
-  border-radius: 14px;
-  object-fit: contain;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
-}
-
-.app-logo:hover {
-  transform: scale(1.08) rotate(-2deg);
-  box-shadow: 0 8px 24px rgba(88, 166, 255, 0.25);
-  border-color: var(--primary);
+  display: block;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .app-header h1 {
