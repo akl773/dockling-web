@@ -3,6 +3,17 @@ import { useDropzone } from 'react-dropzone'
 
 import type { ConversionSettings, FileOverrideState, ImageHandling, TableMode } from '../lib/api'
 
+function truncateMiddle(name: string, maxLen = 40): string {
+  if (name.length <= maxLen) return name
+  const dotIdx = name.lastIndexOf('.')
+  const ext = dotIdx > -1 ? name.slice(dotIdx) : ''
+  const base = dotIdx > -1 ? name.slice(0, dotIdx) : name
+  const keep = maxLen - ext.length - 3
+  const front = Math.ceil(keep / 2)
+  const back = Math.floor(keep / 2)
+  return base.slice(0, front) + '...' + base.slice(-back) + ext
+}
+
 type UploadPanelProps = {
   onSubmit: (payload: {
     files: File[]
@@ -159,27 +170,31 @@ export function UploadPanel({ onSubmit, isSubmitting }: UploadPanelProps) {
       </div>
 
       {fileRows.length > 0 && (
+        <>
+        <button className="primary-button" disabled={files.length === 0 || isSubmitting} onClick={() => void handleSubmit()} type="button">
+          {isSubmitting ? 'Queueing...' : `Queue ${files.length || ''} PDF${files.length === 1 ? '' : 's'}`}
+        </button>
         <div className="file-list">
           {fileRows.map(({ file, override }) => (
             <div className="file-row" key={`${file.name}-${file.size}`}>
-              <div>
-                <strong>{file.name}</strong>
+              <div title={file.name}>
+                <strong>{truncateMiddle(file.name)}</strong>
                 <p>{Math.ceil(file.size / 1024)} KB</p>
               </div>
               <div className="override-grid">
                 <select value={override.ocr_enabled} onChange={(event) => updateOverride(file.name, { ocr_enabled: event.target.value as OverrideSelection['ocr_enabled'] })}>
-                  <option value="default">OCR: Default</option>
+                  <option value="default">OCR: Default ({settings.ocr_enabled ? 'On' : 'Off'})</option>
                   <option value="true">OCR: On</option>
                   <option value="false">OCR: Off</option>
                 </select>
                 <select value={override.table_mode} onChange={(event) => updateOverride(file.name, { table_mode: event.target.value as OverrideSelection['table_mode'] })}>
-                  <option value="default">Tables: Default</option>
+                  <option value="default">Tables: Default ({settings.table_mode === 'off' ? 'Off' : settings.table_mode === 'fast' ? 'Fast' : 'Accurate'})</option>
                   <option value="off">Tables: Off</option>
                   <option value="fast">Tables: Fast</option>
                   <option value="accurate">Tables: Accurate</option>
                 </select>
                 <select value={override.image_handling} onChange={(event) => updateOverride(file.name, { image_handling: event.target.value as OverrideSelection['image_handling'] })}>
-                  <option value="default">Images: Default</option>
+                  <option value="default">Images: Default ({settings.image_handling === 'none' ? 'None' : settings.image_handling === 'referenced' ? 'Referenced' : 'Embedded'})</option>
                   <option value="none">Images: None</option>
                   <option value="referenced">Images: Referenced</option>
                   <option value="embedded">Images: Embedded</option>
@@ -191,11 +206,11 @@ export function UploadPanel({ onSubmit, isSubmitting }: UploadPanelProps) {
             </div>
           ))}
         </div>
+        <button className="primary-button" disabled={files.length === 0 || isSubmitting} onClick={() => void handleSubmit()} type="button">
+          {isSubmitting ? 'Queueing...' : `Queue ${files.length || ''} PDF${files.length === 1 ? '' : 's'}`}
+        </button>
+        </>
       )}
-
-      <button className="primary-button" disabled={files.length === 0 || isSubmitting} onClick={() => void handleSubmit()} type="button">
-        {isSubmitting ? 'Queueing...' : `Queue ${files.length || ''} PDF${files.length === 1 ? '' : 's'}`}
-      </button>
     </section>
   )
 }

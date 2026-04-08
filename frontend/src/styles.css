@@ -633,7 +633,6 @@ select:focus {
 
 .file-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
@@ -643,6 +642,7 @@ select:focus {
 }
 
 .file-row > div:first-child {
+  flex: 1;
   min-width: 0;
 }
 
@@ -661,10 +661,15 @@ select:focus {
   font-size: 0.8125rem;
 }
 
+.file-row > .ghost-button {
+  flex-shrink: 0;
+}
+
 .override-grid {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .override-grid select {
