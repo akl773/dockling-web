@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { JobDetail } from './components/JobDetail'
 import { JobTable } from './components/JobTable'
+import { ThemeToggle } from './components/ThemeToggle'
 import { UploadPanel } from './components/UploadPanel'
 import {
   createBatch,
@@ -14,6 +15,7 @@ import {
   type Job,
   type ConversionSettings,
 } from './lib/api'
+import { useTheme } from './lib/useTheme'
 import { SkeletonStats, SkeletonJobList, SkeletonDetail } from './components/Skeletons'
 
 function flattenJobs(batches: Batch[]): Job[] {
@@ -27,6 +29,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<AppView>('overview')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string>('')
+  const [theme, toggleTheme] = useTheme()
 
   const batchesQuery = useQuery({
     queryKey: ['batches'],
@@ -121,6 +124,7 @@ export default function App() {
           </div>
         </div>
         <div className="status-bar" aria-label="Queue status">
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <span className="status-chip">
             <span className="status-dot queued" />
             Queued <span className="count">{queuedCount}</span>

@@ -8,6 +8,7 @@
   --text: #c9d1d9;
   --text-muted: #8b949e;
   --text-link: #58a6ff;
+  --text-heading: #ffffff;
   --primary: #58a6ff;
   --primary-hover: #79b8ff;
   --success: #3fb950;
@@ -17,6 +18,24 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --surface-hover: #f0f2f5;
+  --border: #d0d7de;
+  --border-focus: #0969da;
+  --text: #1f2328;
+  --text-muted: #656d76;
+  --text-link: #0969da;
+  --text-heading: #1f2328;
+  --primary: #0969da;
+  --primary-hover: #0550ae;
+  --success: #1a7f37;
+  --warning: #9a6700;
+  --danger: #cf222e;
 }
 
 * {
@@ -92,7 +111,7 @@ input {
   margin: 0;
   font-size: 1.875rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-heading);
   letter-spacing: -0.02em;
 }
 
@@ -199,7 +218,7 @@ input {
 
 .nav-item.active {
   background: var(--surface-hover);
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .nav-item .label {
@@ -224,7 +243,7 @@ input {
 
 .nav-item.active .count {
   background: var(--primary);
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .view-main {
@@ -246,7 +265,7 @@ input {
   margin: 0 0 4px;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .stats-grid {
@@ -274,7 +293,7 @@ input {
 .stat-row strong {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .section-header {
@@ -342,7 +361,7 @@ input {
 
 .job-row-main strong {
   display: block;
-  color: #fff;
+  color: var(--text-heading);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -501,7 +520,7 @@ select:focus {
   padding: 10px 20px;
   border: none;
   background: var(--primary);
-  color: #fff;
+  color: var(--text-heading);
   border-radius: 6px;
   font-size: 0.9375rem;
   font-weight: 500;
@@ -542,6 +561,14 @@ select:focus {
   cursor: not-allowed;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+}
+
 .ghost-link {
   color: var(--text-link);
   background: none;
@@ -579,7 +606,7 @@ select:focus {
 
 .file-row strong {
   display: block;
-  color: #fff;
+  color: var(--text-heading);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -616,7 +643,7 @@ select:focus {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .action-row {
@@ -715,7 +742,7 @@ select:focus {
 .markdown-shell h2,
 .markdown-shell h3 {
   margin: 16px 0 8px;
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .markdown-shell h1:first-child,

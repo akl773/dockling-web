@@ -2,6 +2,7 @@ FROM node:22-alpine AS frontend-builder
 WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json frontend/tsconfig.json frontend/tsconfig.app.json frontend/tsconfig.node.json frontend/vite.config.ts frontend/index.html ./
 COPY frontend/src ./src
+COPY frontend/public ./public
 RUN npm ci && npm run build
 
 FROM python:3.11-slim AS runtime

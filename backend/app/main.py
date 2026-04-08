@@ -137,6 +137,7 @@ def create_app(
                 source_path,
                 media_type="application/pdf",
                 filename=job.original_filename,
+                content_disposition_type="inline",
             )
 
     @app.get("/api/jobs/{job_id}/markdown")
