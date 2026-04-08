@@ -472,6 +472,7 @@ input {
   border-radius: 3px;
   transition: background 0.15s;
   align-self: stretch;
+  touch-action: none;
 }
 
 .resize-handle:hover,
@@ -543,6 +544,7 @@ input {
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  pointer-events: none;
 }
 
 .job-row-main {

@@ -45,8 +45,17 @@ export default function App() {
   const [theme, toggleTheme] = useTheme()
   const [panelWidth, setPanelWidth] = useState(340)
   const isResizing = useRef(false)
+  const activePointerId = useRef<number | null>(null)
   const handleRef = useRef<HTMLDivElement>(null)
   const splitViewRef = useRef<HTMLElement>(null)
+
+  const finishResize = useCallback(() => {
+    isResizing.current = false
+    activePointerId.current = null
+    handleRef.current?.classList.remove('active')
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+  }, [])
 
   const getPanelBounds = useCallback(() => {
     const container = splitViewRef.current
@@ -72,31 +81,50 @@ export default function App() {
     [getPanelBounds],
   )
 
-  const onResizeStart = useCallback((e: React.MouseEvent) => {
+  const onResizeStart = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) {
+      return
+    }
+
     e.preventDefault()
+    activePointerId.current = e.pointerId
     isResizing.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
     handleRef.current?.classList.add('active')
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
+  }, [])
 
-    const onMove = (ev: MouseEvent) => {
-      if (!isResizing.current) return
-      const container = splitViewRef.current
-      if (!container) return
-      const rect = container.getBoundingClientRect()
-      setPanelWidth(clampPanelWidth(ev.clientX - rect.left))
+  const onResizeMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isResizing.current || activePointerId.current !== e.pointerId) {
+      return
     }
-    const onUp = () => {
-      isResizing.current = false
-      handleRef.current?.classList.remove('active')
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup', onUp)
+
+    const container = splitViewRef.current
+    if (!container) {
+      return
     }
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseup', onUp)
+
+    const rect = container.getBoundingClientRect()
+    setPanelWidth(clampPanelWidth(e.clientX - rect.left))
   }, [clampPanelWidth])
+
+  const onResizeEnd = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (activePointerId.current !== e.pointerId) {
+        return
+      }
+
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
+
+      finishResize()
+    },
+    [finishResize],
+  )
+
+  useEffect(() => finishResize, [finishResize])
 
   useEffect(() => {
     function syncPanelWidth() {
@@ -410,7 +438,15 @@ export default function App() {
             batchesQuery.isLoading ? (
               <section className="split-view" ref={splitViewRef} style={splitStyle}>
                 <SkeletonJobList />
-                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
+                <div
+                  className="resize-handle"
+                  ref={handleRef}
+                  onLostPointerCapture={finishResize}
+                  onPointerCancel={onResizeEnd}
+                  onPointerDown={onResizeStart}
+                  onPointerMove={onResizeMove}
+                  onPointerUp={onResizeEnd}
+                />
                 <SkeletonDetail />
               </section>
             ) : (
@@ -427,7 +463,15 @@ export default function App() {
                   selectedBatchFilter={selectedBatchFilter}
                   onClearBatchFilter={() => setSelectedBatchFilter(null)}
                 />
-                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
+                <div
+                  className="resize-handle"
+                  ref={handleRef}
+                  onLostPointerCapture={finishResize}
+                  onPointerCancel={onResizeEnd}
+                  onPointerDown={onResizeStart}
+                  onPointerMove={onResizeMove}
+                  onPointerUp={onResizeEnd}
+                />
                 <JobDetail
                   job={selectedJob ?? null}
                   batch={selectedBatch}
@@ -443,7 +487,15 @@ export default function App() {
             batchesQuery.isLoading ? (
               <section className="split-view" ref={splitViewRef} style={splitStyle}>
                 <SkeletonJobList />
-                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
+                <div
+                  className="resize-handle"
+                  ref={handleRef}
+                  onLostPointerCapture={finishResize}
+                  onPointerCancel={onResizeEnd}
+                  onPointerDown={onResizeStart}
+                  onPointerMove={onResizeMove}
+                  onPointerUp={onResizeEnd}
+                />
                 <SkeletonDetail />
               </section>
             ) : (
@@ -460,7 +512,15 @@ export default function App() {
                   selectedBatchFilter={selectedBatchFilter}
                   onClearBatchFilter={() => setSelectedBatchFilter(null)}
                 />
-                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
+                <div
+                  className="resize-handle"
+                  ref={handleRef}
+                  onLostPointerCapture={finishResize}
+                  onPointerCancel={onResizeEnd}
+                  onPointerDown={onResizeStart}
+                  onPointerMove={onResizeMove}
+                  onPointerUp={onResizeEnd}
+                />
                 <JobDetail
                   job={selectedJob ?? null}
                   batch={selectedBatch}

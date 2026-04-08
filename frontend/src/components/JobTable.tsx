@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import type { Batch, Job, JobStatus } from '../lib/api'
 import { batchDownloadUrl } from '../lib/api'
 import { SkeletonJobRow } from './Skeletons'
@@ -256,6 +256,7 @@ function FlatJobRow({
 
 export function JobTable({ title, description, jobs, batchesById, selectedJobId, onSelectJob, isLoading, onSelectBatch, selectedBatchFilter, onClearBatchFilter }: JobTableProps) {
   const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set())
+  const autoExpandedSelectionRef = useRef<string | null>(null)
 
   const enableGrouping = !!onSelectBatch && !selectedBatchFilter
 
@@ -305,9 +306,18 @@ export function JobTable({ title, description, jobs, batchesById, selectedJobId,
 
   // Auto-expand the batch containing the selected job (only when selection changes)
   useEffect(() => {
-    if (!enableGrouping || !selectedJobId) return
+    if (!enableGrouping || !selectedJobId) {
+      autoExpandedSelectionRef.current = null
+      return
+    }
+
+    if (autoExpandedSelectionRef.current === selectedJobId) {
+      return
+    }
+
     const job = jobs.find((j) => j.id === selectedJobId)
     if (!job) return
+
     const batch = batchesById[job.batch_id]
     if (batch && batch.file_count > 1) {
       setExpandedBatches((prev) => {
@@ -317,6 +327,8 @@ export function JobTable({ title, description, jobs, batchesById, selectedJobId,
         return next
       })
     }
+
+    autoExpandedSelectionRef.current = selectedJobId
   }, [selectedJobId, enableGrouping, jobs, batchesById])
 
   function toggleBatch(batchId: string) {
