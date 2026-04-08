@@ -23,6 +23,7 @@ from app.repositories import (
     get_job,
     list_batches,
     list_jobs,
+    retry_failed_job,
 )
 from app.schemas import (
     BatchRead,
@@ -166,6 +167,21 @@ def create_app(
             if job is None:
                 raise HTTPException(status_code=404, detail="Job not found")
             return JobRead.model_validate(job)
+
+    @app.post("/api/jobs/{job_id}/retry", response_model=JobRead)
+    def retry_job(job_id: str) -> JobRead:
+        with session_scope(session_factory) as session:
+            job = get_job(session, job_id)
+            if job is None:
+                raise HTTPException(status_code=404, detail="Job not found")
+            if job.status != "failed":
+                raise HTTPException(
+                    status_code=409, detail="Only failed jobs can be retried"
+                )
+            retried_job = retry_failed_job(session, job_id)
+            if retried_job is None:
+                raise HTTPException(status_code=404, detail="Job not found")
+            return JobRead.model_validate(retried_job)
 
     @app.get("/api/jobs/{job_id}/source")
     def job_source(job_id: str) -> FileResponse:

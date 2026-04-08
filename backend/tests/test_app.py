@@ -65,6 +65,36 @@ def test_failed_job_does_not_block_batch(client) -> None:
     assert refreshed_batch.json()["status"] == "partial"
 
 
+def test_failed_job_can_be_retried(client) -> None:
+    response = client.post(
+        "/api/batches",
+        files=[("files", ("bad.pdf", b"%PDF-1.4 FAIL", "application/pdf"))],
+        data={
+            "settings": '{"ocr_enabled": true, "table_mode": "fast", "image_handling": "none"}'
+        },
+    )
+    response.raise_for_status()
+    batch = response.json()
+    job_id = batch["jobs"][0]["id"]
+
+    failed_job = wait_for_job(client, job_id, expected_terminal={"failed"})
+    first_finished_at = failed_job["finished_at"]
+    assert first_finished_at is not None
+
+    retry_response = client.post(f"/api/jobs/{job_id}/retry")
+    retry_response.raise_for_status()
+    retried_job = retry_response.json()
+
+    assert retried_job["status"] == "queued"
+    assert retried_job["progress"] == 10
+    assert retried_job["error_message"] is None
+    assert retried_job["started_at"] is None
+    assert retried_job["finished_at"] is None
+
+    retried_failure = wait_for_job(client, job_id, expected_terminal={"failed"})
+    assert retried_failure["finished_at"] != first_finished_at
+
+
 def test_batch_download_contains_outputs_and_assets(client) -> None:
     response = client.post(
         "/api/batches",

@@ -204,3 +204,16 @@ def mark_job_failed(
     job.finished_at = utcnow()
     refresh_batch_status(session, job.batch_id)
     return job
+
+
+def retry_failed_job(session: Session, job_id: str) -> JobModel | None:
+    job = session.get(JobModel, job_id)
+    if job is None:
+        return None
+    job.status = JobStatus.QUEUED.value
+    job.progress = 10
+    job.error_message = None
+    job.started_at = None
+    job.finished_at = None
+    refresh_batch_status(session, job.batch_id)
+    return job
