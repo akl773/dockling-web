@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: backend-dev
+    ports:
+      - "8176:8176"
+    environment:
+      DATABASE_URL: sqlite:////data/app.db
+      DATA_DIR: /data
+      OMP_NUM_THREADS: "4"
+      PYTHONUNBUFFERED: "1"
+      MAX_CONCURRENT_JOBS: "1"
+    volumes:
+      - ./backend/app:/app/backend/app
+      - app_data:/data
+      - docling_cache:/root/.cache/docling
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: frontend-dev
+    ports:
+      - "6176:6176"
+    environment:
+      API_TARGET: http://backend:8176
+    volumes:
+      - ./frontend/src:/frontend/src
+      - ./frontend/public:/frontend/public
+      - ./frontend/index.html:/frontend/index.html
+      - ./frontend/vite.config.ts:/frontend/vite.config.ts
+    depends_on:
+      - backend
+
+volumes:
+  app_data:
+  docling_cache:
