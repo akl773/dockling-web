@@ -9,6 +9,7 @@ export function ThemeToggle({ theme, onToggle }: ThemeToggleProps) {
       type="button"
       className="ghost-button theme-toggle"
       onClick={onToggle}
+      aria-pressed={theme === 'dark'}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
