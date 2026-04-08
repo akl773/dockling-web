@@ -20,9 +20,11 @@ type JobDetailProps = {
   markdown: string
   isMarkdownLoading: boolean
   isLoading?: boolean
+  onRetry?: () => Promise<unknown> | void
+  isRetrying?: boolean
 }
 
-export function JobDetail({ job, batch, markdown, isMarkdownLoading, isLoading }: JobDetailProps) {
+export function JobDetail({ job, batch, markdown, isMarkdownLoading, isLoading, onRetry, isRetrying = false }: JobDetailProps) {
   const [previewTab, setPreviewTab] = useState<'pdf' | 'markdown'>('pdf')
 
   async function copyMarkdown() {
@@ -52,6 +54,12 @@ export function JobDetail({ job, batch, markdown, isMarkdownLoading, isLoading }
           <h2>{job.original_filename}</h2>
         </div>
         <div className="action-row">
+          {job.status === 'failed' && onRetry ? (
+            <button className="action-pill" disabled={isRetrying} onClick={() => void onRetry()} type="button" title="Retry failed job">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10" /><path d="M20.49 15a9 9 0 0 1-14.13 3.36L1 14" /></svg>
+              <span>{isRetrying ? 'Retrying...' : 'Retry'}</span>
+            </button>
+          ) : null}
           <a className="action-pill" href={jobDownloadUrl(job.id)} title="Download markdown">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Markdown</span>

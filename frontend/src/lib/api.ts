@@ -70,6 +70,13 @@ export async function fetchMarkdown(jobId: string): Promise<string> {
   return response.text()
 }
 
+export async function retryJob(jobId: string): Promise<Job> {
+  const response = await fetch(`/api/jobs/${jobId}/retry`, {
+    method: 'POST',
+  })
+  return parseResponse<Job>(response)
+}
+
 export async function createBatch(args: {
   files: File[]
   settings: ConversionSettings

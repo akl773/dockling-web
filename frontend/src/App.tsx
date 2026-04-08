@@ -10,6 +10,7 @@ import {
   fetchBatches,
   fetchJob,
   fetchMarkdown,
+  retryJob,
   type Batch,
   type FileOverrideState,
   type Job,
@@ -48,6 +49,7 @@ export default function App() {
   const activePointerId = useRef<number | null>(null)
   const handleRef = useRef<HTMLDivElement>(null)
   const splitViewRef = useRef<HTMLElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
 
   const finishResize = useCallback(() => {
     isResizing.current = false
@@ -170,6 +172,12 @@ export default function App() {
     enabled: selectedJob?.status === 'done',
   })
 
+  function navigateToView(view: AppView) {
+    window.location.hash = view
+    setCurrentView(view)
+    setSelectedBatchFilter(null)
+  }
+
   const uploadMutation = useMutation({
     mutationFn: (payload: {
       files: File[]
@@ -183,6 +191,23 @@ export default function App() {
     },
     onError: (error) => {
       setFeedback(error instanceof Error ? error.message : 'Upload failed')
+    },
+  })
+
+  const retryMutation = useMutation({
+    mutationFn: retryJob,
+    onSuccess: async (job) => {
+      setFeedback(`Requeued ${job.original_filename}.`)
+      queryClient.setQueryData(['job', job.id], job)
+      setSelectedJobId(job.id)
+      navigateToView('active-jobs')
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['batches'] }),
+        queryClient.invalidateQueries({ queryKey: ['job', job.id] }),
+      ])
+    },
+    onError: (error) => {
+      setFeedback(error instanceof Error ? error.message : 'Retry failed')
     },
   })
 
@@ -202,12 +227,6 @@ export default function App() {
   const failedCount = jobs.filter((job) => job.status === 'failed').length
   const processingCount = jobs.filter((job) => job.status === 'processing').length
   const queuedCount = jobs.filter((job) => job.status === 'queued').length
-
-  function navigateToView(view: AppView) {
-    window.location.hash = view
-    setCurrentView(view)
-    setSelectedBatchFilter(null)
-  }
 
   useEffect(() => {
     if (selectedBatchFilter) {
@@ -246,6 +265,30 @@ export default function App() {
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) {
+      return
+    }
+
+    const root = document.documentElement
+    const syncHeaderHeight = () => {
+      root.style.setProperty('--app-header-height', `${Math.ceil(header.getBoundingClientRect().height)}px`)
+    }
+
+    syncHeaderHeight()
+
+    const observer = new ResizeObserver(syncHeaderHeight)
+    observer.observe(header)
+    window.addEventListener('resize', syncHeaderHeight)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', syncHeaderHeight)
+      root.style.removeProperty('--app-header-height')
+    }
   }, [])
 
   useEffect(() => {
@@ -315,7 +358,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
+      <header className="app-header" ref={headerRef}>
         <div className="app-header-main">
           <img src="/favicon.png" alt="Docling Logo" className="app-logo" />
           <div>
@@ -478,6 +521,8 @@ export default function App() {
                   markdown={markdownQuery.data ?? ''}
                   isMarkdownLoading={markdownQuery.isLoading}
                   isLoading={selectedJobQuery.isLoading}
+                  onRetry={selectedJob?.status === 'failed' ? () => retryMutation.mutateAsync(selectedJob.id) : undefined}
+                  isRetrying={retryMutation.isPending && retryMutation.variables === selectedJob?.id}
                 />
               </section>
             )
@@ -527,6 +572,8 @@ export default function App() {
                   markdown={markdownQuery.data ?? ''}
                   isMarkdownLoading={markdownQuery.isLoading}
                   isLoading={selectedJobQuery.isLoading}
+                  onRetry={selectedJob?.status === 'failed' ? () => retryMutation.mutateAsync(selectedJob.id) : undefined}
+                  isRetrying={retryMutation.isPending && retryMutation.variables === selectedJob?.id}
                 />
               </section>
             )
