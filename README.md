@@ -4,6 +4,18 @@ A self-hosted, dockerized web interface for Docling to easily extract and parse 
 ## Overview
 Docling Web is a modular monolith built to provide a robust web UI and API for the Docling document conversion library. It allows you to process PDF forms, extract contents into markdown, and manage conversion jobs via a persistent SQLite-backed queue, all packaged into a single deployable Docker container.
 
+## Screenshots
+
+### Batch Upload
+Queue PDFs with shared and per-file settings for OCR, table extraction, and image handling.
+
+![Batch Upload](docs/images/batch-upload.png)
+
+### Active Jobs
+Monitor queued and processing jobs, inspect the original PDF alongside the generated Markdown.
+
+![Active Jobs](docs/images/active-jobs.png)
+
 ## Core Capabilities
 - Web UI for document upload and conversion tracking
 - FastAPI-powered API and static asset serving
