@@ -24,4 +24,4 @@ COPY backend/tests ./tests
 COPY --from=frontend-builder /frontend/dist /app/frontend-dist
 
 EXPOSE 8176
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8176"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8176 --workers ${UVICORN_WORKERS:-1}"]

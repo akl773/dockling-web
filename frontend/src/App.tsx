@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { JobDetail } from './components/JobDetail'
@@ -39,6 +39,38 @@ export default function App() {
   const [feedback, setFeedback] = useState<string>('')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [theme, toggleTheme] = useTheme()
+  const [panelWidth, setPanelWidth] = useState(340)
+  const isResizing = useRef(false)
+  const handleRef = useRef<HTMLDivElement>(null)
+
+  const onResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    isResizing.current = true
+    handleRef.current?.classList.add('active')
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isResizing.current) return
+      const container = handleRef.current?.parentElement
+      if (!container) return
+      const rect = container.getBoundingClientRect()
+      const newWidth = Math.min(600, Math.max(260, ev.clientX - rect.left))
+      setPanelWidth(newWidth)
+    }
+    const onUp = () => {
+      isResizing.current = false
+      handleRef.current?.classList.remove('active')
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [])
+
+  const splitStyle = { gridTemplateColumns: `${panelWidth}px 6px 1fr` }
 
   const batchesQuery = useQuery({
     queryKey: ['batches'],
@@ -335,12 +367,13 @@ export default function App() {
 
           {currentView === 'active-jobs' ? (
             batchesQuery.isLoading ? (
-              <section className="split-view">
+              <section className="split-view" style={splitStyle}>
                 <SkeletonJobList />
+                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
                 <SkeletonDetail />
               </section>
             ) : (
-              <section className="split-view">
+              <section className="split-view" style={splitStyle}>
                 <JobTable
                   title="Active Jobs"
                   description="Queued and processing"
@@ -353,6 +386,7 @@ export default function App() {
                   selectedBatchFilter={selectedBatchFilter}
                   onClearBatchFilter={() => setSelectedBatchFilter(null)}
                 />
+                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
                 <JobDetail
                   job={selectedJob ?? null}
                   batch={selectedBatch}
@@ -366,12 +400,13 @@ export default function App() {
 
           {currentView === 'history' ? (
             batchesQuery.isLoading ? (
-              <section className="split-view">
+              <section className="split-view" style={splitStyle}>
                 <SkeletonJobList />
+                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
                 <SkeletonDetail />
               </section>
             ) : (
-              <section className="split-view">
+              <section className="split-view" style={splitStyle}>
                 <JobTable
                   title="History"
                   description="Completed and failed"
@@ -384,6 +419,7 @@ export default function App() {
                   selectedBatchFilter={selectedBatchFilter}
                   onClearBatchFilter={() => setSelectedBatchFilter(null)}
                 />
+                <div className="resize-handle" ref={handleRef} onMouseDown={onResizeStart} />
                 <JobDetail
                   job={selectedJob ?? null}
                   batch={selectedBatch}

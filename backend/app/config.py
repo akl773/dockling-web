@@ -15,3 +15,4 @@ class Settings(BaseSettings):
     worker_poll_interval: float = 1.0
     max_concurrent_jobs: int = 1
     omp_num_threads: int = 4
+    uvicorn_workers: int = 1

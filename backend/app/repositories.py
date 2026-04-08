@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session, selectinload
 
 from .models import BatchModel, BatchStatus, JobModel, JobStatus
@@ -150,19 +150,28 @@ def recover_processing_jobs(session: Session) -> int:
 
 
 def claim_next_job(session: Session) -> str | None:
-    statement = (
-        select(JobModel)
+    subq = (
+        select(JobModel.id)
         .where(JobModel.status == JobStatus.QUEUED.value)
         .order_by(JobModel.created_at.asc())
+        .limit(1)
+        .scalar_subquery()
     )
-    job = session.scalars(statement).first()
-    if job is None:
+    stmt = (
+        update(JobModel)
+        .where(JobModel.id == subq)
+        .values(
+            status=JobStatus.PROCESSING.value,
+            progress=25,
+            started_at=utcnow(),
+        )
+        .returning(JobModel.id, JobModel.batch_id)
+    )
+    row = session.execute(stmt).first()
+    if row is None:
         return None
-    job.status = JobStatus.PROCESSING.value
-    job.progress = 25
-    job.started_at = utcnow()
-    refresh_batch_status(session, job.batch_id)
-    return job.id
+    refresh_batch_status(session, row.batch_id)
+    return row.id
 
 
 def set_job_progress(session: Session, job_id: str, progress: int) -> None:
