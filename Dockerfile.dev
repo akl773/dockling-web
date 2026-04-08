@@ -17,7 +17,8 @@ FROM node:22-alpine AS frontend-dev
 
 WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+# Two-step install to avoid ETXTBSY race condition with esbuild on Docker BuildKit
+RUN npm ci --ignore-scripts && npm rebuild esbuild
 
 # Copy config files needed by vite (source is mounted as volume)
 COPY frontend/tsconfig.json frontend/tsconfig.app.json frontend/tsconfig.node.json ./
