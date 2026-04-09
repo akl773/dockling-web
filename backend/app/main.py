@@ -19,6 +19,7 @@ from app.database import build_engine, build_session_factory, session_scope
 from app.models import Base
 from app.repositories import (
     create_batch_with_jobs,
+    delete_all_batches,
     get_batch,
     get_job,
     list_batches,
@@ -144,6 +145,31 @@ def create_app(
     def batches() -> list[BatchRead]:
         with session_scope(session_factory) as session:
             return [BatchRead.model_validate(batch) for batch in list_batches(session)]
+
+    @app.get("/api/batches/download-all")
+    def download_all_batches() -> FileResponse:
+        with session_scope(session_factory) as session:
+            bundle_path = bundler.build_for_all_batches(session)
+            if bundle_path is None or not bundle_path.exists():
+                raise HTTPException(
+                    status_code=409,
+                    detail="No completed outputs available for download",
+                )
+            return FileResponse(
+                bundle_path,
+                media_type="application/zip",
+                filename="all-batches.zip",
+                headers={
+                    "Content-Disposition": 'attachment; filename="all-batches.zip"'
+                },
+            )
+
+    @app.delete("/api/batches")
+    def delete_batches() -> dict[str, int]:
+        with session_scope(session_factory) as session:
+            count = delete_all_batches(session)
+        storage.purge_all()
+        return {"deleted": count}
 
     @app.get("/api/batches/{batch_id}", response_model=BatchRead)
     def batch_detail(batch_id: str) -> BatchRead:
