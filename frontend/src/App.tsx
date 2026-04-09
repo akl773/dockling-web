@@ -6,7 +6,9 @@ import { JobTable } from './components/JobTable'
 import { ThemeToggle } from './components/ThemeToggle'
 import { UploadPanel } from './components/UploadPanel'
 import {
+  allBatchesDownloadUrl,
   createBatch,
+  deleteAllBatches,
   fetchBatches,
   fetchJob,
   fetchMarkdown,
@@ -200,7 +202,6 @@ export default function App() {
       setFeedback(`Requeued ${job.original_filename}.`)
       queryClient.setQueryData(['job', job.id], job)
       setSelectedJobId(job.id)
-      navigateToView('active-jobs')
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['batches'] }),
         queryClient.invalidateQueries({ queryKey: ['job', job.id] }),
@@ -208,6 +209,18 @@ export default function App() {
     },
     onError: (error) => {
       setFeedback(error instanceof Error ? error.message : 'Retry failed')
+    },
+  })
+
+  const deleteAllMutation = useMutation({
+    mutationFn: deleteAllBatches,
+    onSuccess: async (result) => {
+      setFeedback(`Deleted ${result.deleted} batch${result.deleted === 1 ? '' : 'es'} and all associated data.`)
+      setSelectedJobId(null)
+      await queryClient.invalidateQueries({ queryKey: ['batches'] })
+    },
+    onError: (error) => {
+      setFeedback(error instanceof Error ? error.message : 'Delete failed')
     },
   })
 
@@ -460,6 +473,36 @@ export default function App() {
                     <strong>{batches.length}</strong>
                   </div>
                 </div>
+                {batches.length > 0 && (
+                  <div className="bulk-actions">
+                    {doneCount > 0 && (
+                      <a className="btn btn-secondary" href={allBatchesDownloadUrl()} download>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Download all batches
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      disabled={deleteAllMutation.isPending}
+                      onClick={() => {
+                        if (window.confirm(`Delete all ${batches.length} batch${batches.length === 1 ? '' : 'es'} and their data? This cannot be undone.`)) {
+                          deleteAllMutation.mutate()
+                        }
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      {deleteAllMutation.isPending ? 'Deleting...' : 'Delete all batches'}
+                    </button>
+                  </div>
+                )}
                 <JobTable
                   title="Recent Jobs"
                   description="Most recent queue activity"
