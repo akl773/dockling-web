@@ -5,7 +5,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from sqlalchemy.orm import Session
 
-from app.repositories import get_batch
+from app.repositories import get_batch, list_batches
 from app.storage import StorageManager
 
 
@@ -42,5 +42,32 @@ class BatchBundleBuilder:
                         archive.write(
                             path,
                             arcname=f"{job.zip_entry_name}/assets/{relative_asset}",
+                        )
+        return bundle_path
+
+    def build_for_all_batches(self, session: Session) -> Path | None:
+        batches = list_batches(session)
+        completed_jobs = [
+            job for batch in batches for job in batch.jobs if job.status == "done"
+        ]
+        if not completed_jobs:
+            return None
+
+        bundle_path = self.storage.bundles_dir / "all-batches.zip"
+        bundle_path.parent.mkdir(parents=True, exist_ok=True)
+        with ZipFile(bundle_path, "w", compression=ZIP_DEFLATED) as archive:
+            for job in completed_jobs:
+                prefix = f"batch-{job.batch_id[:8]}/{job.zip_entry_name}"
+                markdown_path = self.storage.resolve(job.markdown_path)
+                assets_dir = self.storage.resolve(job.assets_dir_path)
+                if markdown_path.exists():
+                    archive.write(markdown_path, arcname=f"{prefix}/output.md")
+                if assets_dir.exists():
+                    for path in assets_dir.rglob("*"):
+                        if not path.is_file():
+                            continue
+                        relative_asset = path.relative_to(assets_dir).as_posix()
+                        archive.write(
+                            path, arcname=f"{prefix}/assets/{relative_asset}"
                         )
         return bundle_path
