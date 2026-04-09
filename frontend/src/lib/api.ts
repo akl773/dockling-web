@@ -108,3 +108,12 @@ export function jobDownloadUrl(jobId: string): string {
 export function batchDownloadUrl(batchId: string): string {
   return `/api/batches/${batchId}/download`
 }
+
+export function allBatchesDownloadUrl(): string {
+  return '/api/batches/download-all'
+}
+
+export async function deleteAllBatches(): Promise<{ deleted: number }> {
+  const response = await fetch('/api/batches', { method: 'DELETE' })
+  return parseResponse<{ deleted: number }>(response)
+}
